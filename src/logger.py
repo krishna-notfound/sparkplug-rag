@@ -23,3 +23,5 @@ class Logger:
 
     def critical(self, message):
         self.console.print(f"[bold white on red][CRITICAL][/bold white on red] {message}")
+
+log = Logger()

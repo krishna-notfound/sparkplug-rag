@@ -1,13 +1,11 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-from typing import List
-from data_loader import DataFilesLoader
-from logger import Logger
 
-log = Logger()
+from typing import List
+from logger import log
 
 class GenerateChunks:
-    def __init__(self , chunks_size : int = 1000 , chunks_overlap : int = 200 , ):
+    def __init__(self , chunks_size : int , chunks_overlap : int, ):
 
         self.all_chunks = []
         self.seps = [
@@ -19,15 +17,15 @@ class GenerateChunks:
         "\u3002",  
         "",]
         self.recursive_spliter = RecursiveCharacterTextSplitter(
-            chunks_size= chunks_size,
-            chunks_overlap = chunks_overlap,
+            chunk_size= chunks_size,
+            chunk_overlap = chunks_overlap,
             separators = self.seps,
             length_function = len
         )
 
     def split_documents(self , documents : List[Document] ) -> List[Document]:
         try:
-            chunks = self.recursive_spliter.split_text(documents)
+            chunks = self.recursive_spliter.split_documents(documents)
             
 
             for idx , chunk in enumerate(chunks):

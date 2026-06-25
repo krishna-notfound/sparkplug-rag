@@ -1,13 +1,13 @@
 from pathlib import Path
 
+from langchain_core.documents import Document
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_community.document_loaders.excel import UnstructuredExcelLoader
 from langchain_community.document_loaders import JSONLoader
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
 from typing import Dict, List , Any
 import os
-from logger import Logger
-log = Logger()
+from logger import log
 
 class DataFilesLoader:
 
@@ -22,7 +22,7 @@ class DataFilesLoader:
         os.makedirs(self.rootdir , exist_ok= True)
 
 
-    def dataExtractor(self , dir:str ) -> List[Any]:
+    def dataExtractor(self , dir:str ) -> List[Document]:
         all_documents = []
         data_path = Path(self.rootdir+dir).resolve()
         log.debug(f"| {data_path} | Used for Readings Files!")

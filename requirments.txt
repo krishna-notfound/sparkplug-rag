@@ -9,5 +9,6 @@ python-dotenv
 nicegui
 docx2txt
 pypdf 
-ipykernel
 rich
+rank-bm25
+streamlit

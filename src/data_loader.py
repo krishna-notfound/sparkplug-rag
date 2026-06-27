@@ -1,4 +1,5 @@
 from pathlib import Path
+import uuid
 
 from langchain_core.documents import Document
 from langchain_community.document_loaders import Docx2txtLoader
@@ -50,8 +51,7 @@ class DataFilesLoader:
                 print(f"[DEBUG] Loading File {file}")
                 try:
                     loader = Loader(str(file))
-                    documents = loader.load()
-                    # 
+                    documents = loader.load() 
                     # print(documents)
 
                     log.success(f"Loaded {len(documents)} documents from {file.name}")
@@ -61,6 +61,7 @@ class DataFilesLoader:
                     for doc in documents:
                         doc.metadata['source_file'] = file.name
                         doc.metadata['file_type'] = extension
+                        doc.metadata["document_id"] = f"doc_{uuid.uuid1().hex[:8]}"
 
                 except Exception as e:
                     print(f"Failed To Load Documents! {e}")

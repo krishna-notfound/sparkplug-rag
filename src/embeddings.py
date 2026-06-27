@@ -31,10 +31,12 @@ class EmbeddingPipeline:
         return self.model.encode([query]).astype('float32')
 
 if __name__ == "__main__":
-    from data_loader import DataFilesLoader
-    from chunks import GenerateChunks
-    loader = DataFilesLoader()
-    chunks = GenerateChunks().split_documents(loader.dataExtractor("temp_upload"))
-    embeddings = EmbeddingPipeline()
-    print(embeddings.embed_chunks(chunks))
+    pass 
+
+    # from data_loader import DataFilesLoader
+    # from chunks import GenerateChunks
+    # loader = DataFilesLoader()
+    # chunks = GenerateChunks().split_documents(loader.dataExtractor("temp_upload"))
+    # embeddings = EmbeddingPipeline()
+    # print(embeddings.embed_chunks(chunks))
 

@@ -11,7 +11,7 @@
 [![Python](https://img.shields.io/badge/Python-3.13+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.58+-ff4b4b?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![FAISS](https://img.shields.io/badge/FAISS-cpu--1.14-3b5998?style=for-the-badge&logo=meta&logoColor=white)](https://github.com/facebookresearch/faiss)
-[![Groq](https://img.shields.io/badge/Groq?style=for-the-badge)](https://groq.com)
+[![Groq](https://img.shields.io/badge/Groq-Llama_3.3_70B-f55036?style=flat-square)](https://groq.com)
 [![LangChain](https://img.shields.io/badge/LangChain-0.4+-1c3c3c?style=for-the-badge)](https://langchain.com)
 
 ---
@@ -62,24 +62,23 @@ SparkPlug doesn't rely on a single search strategy. It runs two fundamentally di
 ```mermaid
 graph TD
     Q[User Query] --> BM["BM25 Keyword Search"]
-    Q --> EMB["Embed Query (384-dim)"]
+    Q --> EMB["Embed Query"]
     EMB --> FAISS["FAISS Vector Search"]
-    BM --> |"Top 10 by term frequency"| RRF{"Reciprocal Rank Fusion (k=60)"}
-    FAISS --> |"Top 10 by L2 distance"| RRF
+    BM --> |"Top n by term frequency"| RRF{"Reciprocal Rank Fusion (k=60)"}
+    FAISS --> |"Top n by L2 distance"| RRF
     RRF --> |"Top 5 fused results"| CTX["Context Assembly"]
-    CTX --> LLM["Groq LLM: Llama 3.3 70B"]
+    CTX --> LLM["Groq LLM"]
     Q --> LLM
     LLM --> ANS["Grounded Answer + Sources"]
 ```
 
 ### Why Two Search Engines?
 
-| Search Type | What It Finds | What It Misses | Example |
-| :--- | :--- | :--- | :--- |
-| **BM25 Only** | Exact names, IDs, codes, acronyms | Paraphrased content, synonyms | ✅ "Ritika Malhotra" · ❌ "the employee who joined in March" |
-| **FAISS Only** | Semantically similar content, rephrased concepts | Rare terms, proper nouns | ✅ "leave policy" from "time off rules" · ❌ "Policy #HR-042" |
-| **Hybrid (RRF)** | Both exact matches AND semantic matches | Almost nothing — covers both failure modes | ✅ Finds both the person AND the policy context |
-
+| Search Type | What It Finds | What It Misses |
+| :--- | :--- | :--- |
+| **BM25 Only** | Exact names, IDs, codes, acronyms | Paraphrased content, synonyms | 
+| **FAISS Only** | Semantically similar content, rephrased concepts | Rare terms, proper nouns | 
+| **Hybrid (RRF)** | Both exact matches AND semantic matches | Almost nothing — covers both failure modes | 
 ### 📄 Multi-Format Document Ingestion
 
 The ingestion engine automatically detects file types and routes them to specialized parsers:
@@ -115,57 +114,48 @@ The LLM operates under strict system-level constraints:
 
 ```mermaid
 flowchart TB
-    subgraph Input["📥 Input Layer"]
-        FILES["Documents (PDF/CSV/Word/Excel/JSON/TXT)"]
-        QUERY["User Query"]
+    subgraph Input["Input"]
+        DOCS["Documents"]
+        QUERY["User Question"]
     end
 
-    subgraph Ingestion["⚙️ Ingestion Pipeline"]
-        LOAD["DataFilesLoader"]
-        CHUNK["GenerateChunks (Recursive Splitter)"]
-        EMBED["EmbeddingPipeline (all-MiniLM-L6-v2)"]
+    subgraph Processing["Processing"]
+        PARSE["Parse Files"]
+        SPLIT["Split into Chunks"]
+        ENCODE["Generate Embeddings"]
     end
 
-    subgraph Storage["💾 Dual Index Storage"]
-        FAISS_IDX["FAISS IndexFlatL2 (faiss.index)"]
-        BM25_IDX["BM25Okapi Index (bm25.pkl)"]
-        META["Document Metadata (documents.pkl)"]
+    subgraph Indexing["Dual Index"]
+        VECTOR["Vector Store (FAISS)"]
+        KEYWORD["Keyword Index (BM25)"]
     end
 
-    subgraph Retrieval["🔍 Hybrid Retrieval"]
-        VS_SEARCH["FAISS Vector Search (Top 10)"]
-        BM_SEARCH["BM25 Keyword Search (Top 10)"]
-        RRF["Reciprocal Rank Fusion"]
+    subgraph Search["Hybrid Search"]
+        SEM["Semantic Search"]
+        KW["Keyword Search"]
+        FUSE["Rank Fusion (RRF)"]
     end
 
-    subgraph Generation["🧠 Generation Layer"]
-        PROMPT["System Prompt + Context Assembly"]
-        LLM["ChatGroq: Llama 3.3 70B Versatile"]
+    subgraph Answer["Answer"]
+        CONTEXT["Build Context"]
+        LLM["LLM Model"]
+        RESPONSE["Answer + Sources"]
     end
 
-    subgraph Output["📤 Output Layer"]
-        ANS["Answer"]
-        SRC["Source Citations"]
-    end
+    DOCS --> PARSE --> SPLIT --> ENCODE --> VECTOR
+    SPLIT --> KEYWORD
 
-    FILES --> LOAD --> CHUNK
-    CHUNK --> EMBED --> FAISS_IDX
-    CHUNK --> BM25_IDX
-    CHUNK --> META
+    QUERY --> SEM
+    QUERY --> KW
+    VECTOR --> SEM
+    KEYWORD --> KW
 
-    QUERY --> VS_SEARCH
-    QUERY --> BM_SEARCH
-    FAISS_IDX --> VS_SEARCH
-    BM25_IDX --> BM_SEARCH
-    
-    VS_SEARCH --> RRF
-    BM_SEARCH --> RRF
-    
-    RRF -->|"Top 5 Chunks"| PROMPT
-    QUERY --> PROMPT
-    PROMPT --> LLM
-    LLM --> ANS
-    LLM --> SRC
+    SEM --> FUSE
+    KW --> FUSE
+
+    FUSE -->|"Top Results"| CONTEXT
+    QUERY --> CONTEXT
+    CONTEXT --> LLM --> RESPONSE
 ```
 
 ### Tech Stack
@@ -225,8 +215,8 @@ SparkPlug/
 
 ```bash
 # Clone the repository
-git clone <repo-url>
-cd RagBased-context-bot
+git clone https://github.com/krishna-notfound/sparkplug-rag.git
+cd sparkplug-rag
 
 # Install dependencies
 pip install -r requirments.txt
@@ -341,7 +331,7 @@ GORQ_API=gsk_your_groq_api_key_here
 
 ### RRF Fusion Formula
 
-$$\text{RRF\_score}(d) = \sum_{r \in \{BM25,\ FAISS\}} \frac{1}{k + \text{rank}_r(d) + 1} \quad \text{where } k = 60$$
+$$\mathrm{RRF{\_}score}(d) = \sum_{r \in \{BM25,\ FAISS\}} \frac{1}{k + \mathrm{rank}_r(d) + 1} \quad \text{where } k = 60$$
 
 ---
 
@@ -376,9 +366,3 @@ MIT License — see [LICENSE](LICENSE) for details.
 ---
 
 <div align="center">
-
-**Built with ❤️ using FAISS · BM25 · Groq · SentenceTransformers · Streamlit · LangChain**
-
-[Back to Top](#-sparkplug)
-
-</div>

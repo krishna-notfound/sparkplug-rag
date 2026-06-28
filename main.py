@@ -51,9 +51,11 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 st.markdown('<div class="main-title"><b>SparkPlug<b></div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Search, retrieve and chat with uploaded documents using Hybrid BM25 & Vector Store.</div>', unsafe_allow_html=True)
 
+st.sidebar.title(" RAG System ")
 
 api_key = GORQ_API
 
+st.sidebar.markdown("---")
 st.sidebar.title("📂 Upload Documents")
 
 uploaded_files = st.sidebar.file_uploader(
@@ -147,7 +149,6 @@ else:
         st.error(f"Failed to load RAG classes: {e}")
         st.info("Check if your files are formatted correctly or if your API key is correct.")
 
-
 for msg in st.session_state.chat_history:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
@@ -157,9 +158,9 @@ for msg in st.session_state.chat_history:
                     st.markdown(f"**Source {idx+1}:** {ref['source']} (Page: {ref['page']})")
                     st.caption(ref['content'])
 
-
 if retriever and llm:
     if query := st.chat_input("Enter your question..."):
+
         st.session_state.chat_history.append({"role": "user", "content": query})
         with st.chat_message("user"):
             st.markdown(query)
@@ -170,6 +171,7 @@ if retriever and llm:
 
                     results = retriever.query(query)
                     
+
                     refs = []
                     for doc_dict in results:
                         doc = doc_dict.get("document")
@@ -180,9 +182,8 @@ if retriever and llm:
                                 "content": doc.page_content
                             })
                             
-   
                     response = llm.generate(query=query, documents=results)
-
+                    
                     if hasattr(response, "content"):
                         response_text = response.content
                     else:

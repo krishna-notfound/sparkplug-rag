@@ -12,3 +12,4 @@ pypdf
 rich
 rank-bm25
 streamlit
+torchvision

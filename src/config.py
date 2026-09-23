@@ -17,7 +17,7 @@ PRESIST_DIR = "vectorstore"
 DOC_PATH = "temp_upload"
 
 
-LLM_MODEL_NAME = "llama-3.3-70b-versatile"
+LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME")
 TEMPERATURE = 0.8
 
 
